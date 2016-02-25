@@ -1,0 +1,15 @@
+<html>
+<body>
+<ul>
+{{#people}}
+<a href="/view-person?selectedPerson={{.}}">{{.}}</a><br>
+{{/people}}
+</ul>
+{{^beginning}}
+<a href="/?offset={{previousOffset}}">Previous</a>
+{{/beginning}}
+{{^end}}
+<a href="/?offset={{nextOffset}}">Next</a><br>
+{{/end}}
+</body>
+</html>
