@@ -26,7 +26,7 @@ public class Main {
                         index += Integer.valueOf(offsetStr);
                     }
                     int offset = 20 + index;
-                    ArrayList<Person> peopleChunk = new ArrayList<>(people.subList(index, Math.min(offset, people.size())));
+                    ArrayList<Person> peopleChunk = new ArrayList<>(people.subList(index, (offset > people.size()?people.size():offset)));
                     m.put("end", offset >= people.size());
                     m.put("beginning", index == 0);
                     m.put("previousOffset", offset - 40);
