@@ -3,7 +3,7 @@ package com.theironyard;
 /**
  * Created by PiratePowWow on 2/24/16.
  */
-public class Person {
+public class Person implements Comparable{
     int id;
     String firstName;
     String lastName;
@@ -76,5 +76,11 @@ public class Person {
 
     public void setIp(String ip) {
         this.ip = ip;
+    }
+
+    @Override
+    public int compareTo(Object o) {
+        Person p = (Person) o;
+        return (lastName.compareTo(p.lastName)==0?firstName.compareTo(p.firstName):lastName.compareTo(p.lastName));
     }
 }
