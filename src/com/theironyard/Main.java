@@ -49,14 +49,13 @@ public class Main {
        return null;
     }
     public static ArrayList<Person> selectPeople(Connection conn, int offset) throws SQLException {
-        PreparedStatement stmt = conn.prepareStatement("SELECT * FROM people LIMIT 20 OFFSET ?");
+        PreparedStatement stmt = conn.prepareStatement("SELECT * FROM people ORDER BY last_name, first_name LIMIT 20 OFFSET ?");
         stmt.setInt(1, offset);
         ResultSet results = stmt.executeQuery();
         ArrayList<Person> people = new ArrayList<>();
         while(results.next()){
             people.add(new Person(results.getInt("id"), results.getString("first_name"), results.getString("last_name"), results.getString("email"), results.getString("country"), results.getString("ip")));
         }
-        Collections.sort(people);
         return people;
     }
     public static int peopleSize(Connection conn) throws SQLException {
@@ -82,12 +81,11 @@ public class Main {
                     if (offsetStr != null) {
                         index += Integer.valueOf(offsetStr);
                     }
-                    int offset = 20 + index;
-                    ArrayList<Person> peopleChunk = selectPeople(conn, (offset > peopleSize(conn)?peopleSize(conn):offset));
-                    m.put("end", offset >= peopleSize(conn));
+                    ArrayList<Person> peopleChunk = selectPeople(conn, (index > peopleSize(conn)?peopleSize(conn):index));
+                    m.put("end", index >= peopleSize(conn));
                     m.put("beginning", index == 0);
-                    m.put("previousOffset", offset - 40);
-                    m.put("nextOffset", offset);
+                    m.put("previousOffset", index - 20);
+                    m.put("nextOffset", index + 20);
                     m.put("people", peopleChunk);
                     return new ModelAndView(m, "home.html");
                 }),
@@ -108,11 +106,25 @@ public class Main {
             File f = new File(file);
             Scanner scanner = new Scanner(f);
             scanner.nextLine();
-            while (scanner.hasNext()){
+            ArrayList<Person> people = new ArrayList<>();
+            while (scanner.hasNext()) {
                 String[] personInfo = scanner.nextLine().split(",");
-                Person person = new Person(Integer.valueOf(personInfo[0]), personInfo[1], personInfo[2],personInfo[3], personInfo[4], personInfo[5]);
-                insertPerson(conn, personInfo[1], personInfo[2], personInfo[3], personInfo[4], personInfo[5]);
-        }
+                Person person = new Person(Integer.valueOf(personInfo[0]), personInfo[1], personInfo[2], personInfo[3], personInfo[4], personInfo[5]);
+//                int index = 0;
+//                for (Person sortedPerson: people){
+//                    if(person.compareTo(sortedPerson)>0){
+//                        index+=1;
+//                    }else{
+//                        break;
+//                    }
+//                }
+//                people.add(index, person);
+//            }
+//            for(Person guy: people){
+//                insertPerson(conn, guy.getFirstName(), guy.getLastName(), guy.getEmail(), guy.getCountry(), guy.getIp());
+//            }
+                insertPerson(conn, person.getFirstName(), person.getLastName(), person.getEmail(), person.getCountry(), person.getIp());
+            }
     }
 }
 
