@@ -1,20 +1,15 @@
 package com.theironyard;
 import spark.ModelAndView;
-import spark.Session;
 import spark.Spark;
 import spark.template.mustache.MustacheTemplateEngine;
-
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.sql.*;
 import java.util.*;
 
 public class Main {
-    //static ArrayList<Person> people = new ArrayList<>();
-    //static HashMap<String, Person> peopleMap = new HashMap<>();
-
     public static Connection startConnection() throws SQLException {
-        Connection conn = DriverManager.getConnection("jdbc:h2:./main");
+        Connection conn = DriverManager.getConnection("jdbc:h2:mem:");
         return conn;
     }
     public void endConnection(Connection conn) throws SQLException {
@@ -64,25 +59,45 @@ public class Main {
         results.next();
         return results.getInt("size");
     }
+    public static void populateDatabase(Connection conn, String file) throws FileNotFoundException, SQLException {
+        File f = new File(file);
+        Scanner scanner = new Scanner(f);
+        scanner.nextLine();
+        //ArrayList<Person> people = new ArrayList<>();
+        while (scanner.hasNext()) {
+            String[] personInfo = scanner.nextLine().split(",");
+            Person person = new Person(Integer.valueOf(personInfo[0]), personInfo[1], personInfo[2], personInfo[3], personInfo[4], personInfo[5]);
+//                int index = 0;
+//                for (Person sortedPerson: people){
+//                    if(person.compareTo(sortedPerson)>0){
+//                        index+=1;
+//                    }else{
+//                        break;
+//                    }
+//                }
+//                people.add(index, person);
+//            }
+//            for(Person guy: people){
+//                insertPerson(conn, guy.getFirstName(), guy.getLastName(), guy.getEmail(), guy.getCountry(), guy.getIp());
+//            }
+            insertPerson(conn, person.getFirstName(), person.getLastName(), person.getEmail(), person.getCountry(), person.getIp());
+        }
+    }
 
     public static void main(String[] args) throws FileNotFoundException, SQLException {
-        Connection conn = DriverManager.getConnection("jdbc:h2:./main");
+        Connection conn = DriverManager.getConnection("jdbc:h2:mem:");
         createTables(conn);
-        Spark.externalStaticFileLocation("public");
         populateDatabase(conn,"people.csv");
         Spark.init();
         Spark.get(
                 "/",
                 ((request, response) -> {
                     int index = 0;
-                    Session session = request.session();
                     String offsetStr = request.queryParams("offset");
                     HashMap m = new HashMap<>();
-                    if (offsetStr != null) {
-                        index += Integer.valueOf(offsetStr);
-                    }
+                    if (offsetStr != null) index += Integer.valueOf(offsetStr);
                     ArrayList<Person> peopleChunk = selectPeople(conn, (index > peopleSize(conn)?peopleSize(conn):index));
-                    m.put("end", index >= peopleSize(conn));
+                    m.put("end", index + 20 >= peopleSize(conn));
                     m.put("beginning", index == 0);
                     m.put("previousOffset", index - 20);
                     m.put("nextOffset", index + 20);
@@ -100,31 +115,6 @@ public class Main {
                 }),
                 new MustacheTemplateEngine()
         );
-        //dropTables(conn);
-    }
-        public static void populateDatabase(Connection conn, String file) throws FileNotFoundException, SQLException {
-            File f = new File(file);
-            Scanner scanner = new Scanner(f);
-            scanner.nextLine();
-            ArrayList<Person> people = new ArrayList<>();
-            while (scanner.hasNext()) {
-                String[] personInfo = scanner.nextLine().split(",");
-                Person person = new Person(Integer.valueOf(personInfo[0]), personInfo[1], personInfo[2], personInfo[3], personInfo[4], personInfo[5]);
-//                int index = 0;
-//                for (Person sortedPerson: people){
-//                    if(person.compareTo(sortedPerson)>0){
-//                        index+=1;
-//                    }else{
-//                        break;
-//                    }
-//                }
-//                people.add(index, person);
-//            }
-//            for(Person guy: people){
-//                insertPerson(conn, guy.getFirstName(), guy.getLastName(), guy.getEmail(), guy.getCountry(), guy.getIp());
-//            }
-                insertPerson(conn, person.getFirstName(), person.getLastName(), person.getEmail(), person.getCountry(), person.getIp());
-            }
     }
 }
 
